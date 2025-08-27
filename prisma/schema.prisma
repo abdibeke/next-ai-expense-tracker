@@ -1,0 +1,47 @@
+// -------------------------------
+// Prisma Schema
+// -------------------------------
+
+// Generate Prisma Client for JS/TS
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Database connection (PostgreSQL)
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------------
+// User Model
+// -------------------------------
+// Stores user info and links to their records
+model User {
+  id          String   @id @default(uuid()) // Unique ID
+  ClerkUserId String   @unique // ID from Clerk auth
+  email       String   @unique // User email
+  name        String? // Optional name
+  imageUrl    String? // Optional profile picture
+  createdAt   DateTime @default(now()) // Created timestamp
+  updatedAt   DateTime @updatedAt // Last updated timestamp
+  Records     Record[] // User's records
+}
+
+// -------------------------------
+// Record Model
+// -------------------------------
+// Stores a record for a user (amount, text, category, date)
+model Record {
+  id        String   @id @default(uuid()) // Unique ID
+  text      String // Record description
+  amount    Float // Record value
+  category  String   @default("Other") // Category, default "Other"
+  date      DateTime @default(now()) // Date of the record
+  userId    String // Linked user ID
+  user      User     @relation(fields: [userId], references: [ClerkUserId], onDelete: Cascade)
+  // Link to user; delete record if user deleted
+  createdAt DateTime @default(now()) // Record created timestamp
+
+  @@index([userId]) // Index to speed up queries by user
+}
